@@ -12,6 +12,7 @@ int main(void) {
 			perror("fork");
 			break;
 		case 0:
+			execl("/bin/echo","/bin/echo","I was born by child", (char *)NULL);
 			printf("I'm child\n");
 			printf("PID = %d\n", pid);
 			printf("PPID = %d\n\n", ppid);

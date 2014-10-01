@@ -1,3 +1,5 @@
 *~
-a.out
+*.out
+*.swp
 osstud/*
+git_rep/*

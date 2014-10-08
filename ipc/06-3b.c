@@ -4,10 +4,11 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#define N 6
 
 int main()
 {
-   int     *array;
+	int     *array, *ready, *turn_, turn, j;
    int     shmid;
    int     new = 1;
    char    pathname[] = "06-3a.c";
@@ -19,13 +20,13 @@ int main()
      exit(-1);
    }
 
-   if((shmid = shmget(key, 3*sizeof(int), 0666|IPC_CREAT|IPC_EXCL)) < 0){
+   if((shmid = shmget(key, N*sizeof(int), 0666|IPC_CREAT|IPC_EXCL)) < 0){
 
       if(errno != EEXIST){
          printf("Can\'t create shared memory\n");
          exit(-1);
       } else {
-         if((shmid = shmget(key, 3*sizeof(int), 0)) < 0){
+         if((shmid = shmget(key, N*sizeof(int), 0)) < 0){
             printf("Can\'t find shared memory\n");
             exit(-1);
 	 }
@@ -37,20 +38,32 @@ int main()
       printf("Can't attach shared memory\n");
       exit(-1);
    }
+	ready = array + 3;
+	turn_ = array + 5;
+	ready[0] = 0; ready[1] = 0;
+	j = 1;
+	// prolog
+		ready[j] = 1;
+		*turn_ = 1-j;
+		while(ready[1-j] && (*turn_ == (1-j))) ;
 
-   if(new){
-      array[0] =  0;
-      array[1] =  1;
-      array[2] =  1;
-   } else {
-      array[1] += 1;
-      for(i=0; i<2000000000L; i++);
-      array[2] += 1;
-   }
+
+	if(new){
+      		array[0] =  1;
+      		array[1] =  0;
+      		array[2] =  1;
+   	} else {
+		 array[1] += 1;
+      		 for(i=0; i<2000000000L; i++);
+      		 array[2] += 1;
+   	}
 
    printf
       ("Program 1 was spawn %d times, program 2 - %d times, total - %d times\n",
       array[0], array[1], array[2]);
+
+	//epilog
+		ready[j] = 0;
 
    if(shmdt(array) < 0){
       printf("Can't detach shared memory\n");

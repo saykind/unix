@@ -27,7 +27,7 @@ int main(int agrv, char *argc[], char *env[]) {
 	// Shmget
 	int err;
 	int shmid = shmget(key, N*sizeof(char), 0664|IPC_CREAT|IPC_EXCL);
-	err = errno;
+	err = errno; 
 	perror("shmget\t"); //printf("shmid = %d\n", shmid);
 	if(shmid < 0) {
 		if(err == EEXIST) {
@@ -35,7 +35,9 @@ int main(int agrv, char *argc[], char *env[]) {
 			perror("shmgete\t");
 			if (shmid < 0) {
 				printf("Segment with that key already exists.\n");
-				printf("Can't create segment.\n"); exit(-1);
+				printf("Can't create segment.\n"); 
+				err = shmctl(shmid, IPC_RMID, NULL); perror("shmctl");
+				if (err < 0) {printf("I'm tired."); exit(-1);}
 			}			
 		} else {
 			printf("Can't create segment.\n");

@@ -9,13 +9,14 @@
 #define SoB sizeof(struct minfo)
 
 int main(int argc, char *argv[], char *envp[]) {
-	int msqid, pid;
+	int msqid;
+	long pid;
 	char pathname[] = "FILE";
 	key_t  key;
 	struct mymsgbuf {
 		long mtype;
 		struct minfo {
-			int pid;
+			long pid;
 			short op;
 			int num;
 			char m[MSG_SIZE];
@@ -26,8 +27,6 @@ int main(int argc, char *argv[], char *envp[]) {
 
 	key = ftok(pathname, 0);
 	msqid = msgget(key, 0666 | IPC_CREAT);
-//	msqid = msgget(key, 0666 | IPC_CREAT | IPC_EXCL);
-//	if ((msqid < 0) && (errno == EEXIST)) {printf("EEXIST\n");}
 	printf("[C]: msqid = %d\n", msqid);
 
 

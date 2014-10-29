@@ -33,9 +33,9 @@ int main(int argc, char *argv[], char *envp[]) {
 	pid = getpid();
 	mybuf.mtype = 1;
     	mybuf.info.pid = pid;
-	mybuf.info.op  = -1;
+	mybuf.info.op  = 1;
 	mybuf.info.num = 0;
-	mybuf.info.end = 0;
+	mybuf.info.end = 1;
 	msgsnd(msqid, (struct msgbuf*) &mybuf, SoB, 0);
 	msgrcv(msqid, (struct msgbuf*) &yourbuf, SoB, pid, 0);
 	printf("[C]: From [S]: %s\n", yourbuf.info.m);

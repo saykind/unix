@@ -12,6 +12,7 @@
 #define SoB sizeof(struct minfo)
 
 /* FIFO array of longs */
+int amount = 0;
 long *init(int N) {
 	long *fifo = (long *) malloc(N*sizeof(long));
 	int i;
@@ -19,10 +20,7 @@ long *init(int N) {
 	return fifo;
 };
 void push(long *fifo, int N, long new) {
-	int i;
-	for (i = N-1; i > 0; i--)
-		fifo[i] = fifo[i-1];
-	fifo[0] = new;
+	fifo[amount++] = new;
 	return;
 }
 long pop(long *fifo, int N) {
@@ -35,13 +33,14 @@ long pop(long *fifo, int N) {
 
 
 int main(void) {
-	int msqid, i, pid, num ,op;
+	int msqid, i, num ,op;
+	long pid;
 	char pathname[] = "FILE";
 	key_t  key;
 	struct mymsgbuf {
 		long mtype;
 		struct minfo {
-			int pid;
+			long pid;
 			short op;
 			int num;
 			char m[MSG_SIZE];
@@ -53,7 +52,11 @@ int main(void) {
 	/* Create or attach message queue  */
 	key = ftok(pathname, 0);
 	msqid = msgget(key, 0666 | IPC_CREAT | IPC_EXCL);
-	if ((msqid < 0) && (errno == EEXIST)) {printf("EEXIST\n"); return 0;}
+	if ((msqid < 0) && (errno == EEXIST)) {
+		printf("EEXIST\n");
+		msqid = msgget(key, 0666 | IPC_CREAT);
+	       	//return 0;
+	}
 	
 	/* FIFO array */
 	long *fifo = init(NoP);
@@ -66,39 +69,39 @@ int main(void) {
 		pid = yourbuf.info.pid;
 		num = yourbuf.info.num;
 		op = yourbuf.info.op;
-		printf("[S]: Recived message from pid = %d, op = %d\n", pid, op);
+		printf("[S]: Recived message from pid = %ld, op = %d\n", pid, op);
 		if (op == 1) {
 			S0++;
 			/* Send information */
 			mybuf.mtype = pid;
 			mybuf.info.pid = 1;
-			sprintf(mybuf.info.m, "OK, %d, V-action complited.", pid);
+			sprintf(mybuf.info.m, "OK, %ld, V-action complited.", pid);
 			msgsnd(msqid, (struct msgbuf *) &mybuf, SoB, 0);
-			printf("[S]: Sended message to %d\n", pid);
-			while (((int) *fifo) != 0) {
-				printf("[S]: Poped from FIFO %d\n", *fifo);
+			printf("[S]: Sended message to %ld\n", pid);
+			if (fifo[0] != 0) {
 				pid = pop(fifo, NoP);
+				printf("[S]: Poped from FIFO %ld\n", pid);
 				// Send information
 				mybuf.mtype = pid;
 				mybuf.info.pid = 1;
-				sprintf(mybuf.info.m, "OK, %d, P-action complited.", pid);
+				sprintf(mybuf.info.m, "OK, %ld, P-action complited.", pid);
 				msgsnd(msqid, (struct msgbuf *) &mybuf, SoB, 0);
-				printf("[S]: Sended message to %d\n", pid);
+				printf("[S]: Sended message to %ld\n", pid);
 			}
 		}
 		if (op == -1) {
 			if (S0 < 1) {
 				push(fifo, NoP, pid);
-				printf("[S]: Push %d to FIFO\n", pid);
+				printf("[S]: Push %ld to FIFO\n", pid);
 			}
 			else {
 				S0--;
 				// Send information
 				mybuf.mtype = pid;
 				mybuf.info.pid = 1;
-				sprintf(mybuf.info.m, "OK, %d, P-action complited.", pid);
+				sprintf(mybuf.info.m, "OK, %ld, P-action complited.", pid);
 				msgsnd(msqid, (struct msgbuf *) &mybuf, SoB, 0);
-				printf("[S]: Sended message to %d\n", pid);
+				printf("[S]: Sended message to %ld\n", pid);
 			}
 		}
 		printf("\n");

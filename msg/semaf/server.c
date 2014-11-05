@@ -28,6 +28,7 @@ long pop(long *fifo, int N) {
 	int i;
 	for (i = 0; i < N-1; i++)
 		fifo[i] = fifo[i+1];
+	amount--;
 	return ret;
 }
 
@@ -53,7 +54,7 @@ int main(void) {
 	key = ftok(pathname, 0);
 	msqid = msgget(key, 0666 | IPC_CREAT | IPC_EXCL);
 	if ((msqid < 0) && (errno == EEXIST)) {
-		printf("EEXIST\n");
+		printf("[S]: EEXIST\n");
 		msqid = msgget(key, 0666 | IPC_CREAT);
 	       	//return 0;
 	}
@@ -62,7 +63,7 @@ int main(void) {
 	long *fifo = init(NoP);
 	int S0 = 0;
 
-	printf("[S]: msqid = %d\n", msqid);
+	printf("[S]: msqid = %d\n\n", msqid);
 	while (1) {
 		/* Recieve */
 		msgrcv(msqid, (struct msgbuf *) &yourbuf, SoB, 1, 0);
@@ -78,7 +79,9 @@ int main(void) {
 			sprintf(mybuf.info.m, "OK, %ld, V-action complited.", pid);
 			msgsnd(msqid, (struct msgbuf *) &mybuf, SoB, 0);
 			printf("[S]: Sended message to %ld\n", pid);
-			if (fifo[0] != 0) {
+			if (amount > 0) {
+			//if (fifo[0] != 0) {
+				S0--;
 				pid = pop(fifo, NoP);
 				printf("[S]: Poped from FIFO %ld\n", pid);
 				// Send information
@@ -104,7 +107,7 @@ int main(void) {
 				printf("[S]: Sended message to %ld\n", pid);
 			}
 		}
-		printf("\n");
+		printf("[S]: S0 = %d\tIn FIFO = %d\n\n", S0, amount);
 		if (yourbuf.info.end) {exit(0);}
 	}
 
